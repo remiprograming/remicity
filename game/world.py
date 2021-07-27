@@ -1,5 +1,6 @@
 import pygame as pg
 from .settings import TILE_SIZE
+import random
 
 class World:
 
@@ -10,6 +11,7 @@ class World:
         self.height = height
 
         self.world = self.create_world()
+        self.tiles = self.loadimag()
 
     def create_world(self):
 
@@ -32,9 +34,28 @@ class World:
             (grid_x * TILE_SIZE, grid_y * TILE_SIZE + TILE_SIZE)
         ]
 
+        minx = min([x for x, y in rect])
+        miny = min([y for x, y in rect])
+
+        r = random.randint(1,100)
+
+        if r <= 10:
+            tile = "skala"
+        else:
+            tile = "trawa"
+
         out = {
             "grid" : [grid_x, grid_y],
-            "cart_rect" : rect
+            "cart_rect" : rect,
+            "render_pos": [minx, miny],
+            "tile": tile
         }
 
         return out
+
+    def loadimag(self):
+
+        trawa = pg.image.load("sprite/trawa.png")
+        skala = pg.image.load("sprite/skala.png")
+
+        return {'trawa': trawa, "skala": skala}

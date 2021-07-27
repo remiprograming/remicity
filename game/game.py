@@ -11,6 +11,7 @@ class Game:
 
         self.world = World(10, 10, self.width, self.height)
 
+
     def run(self):
         self.playing = True
         while self.playing:
@@ -41,4 +42,12 @@ class Game:
                 sq = self.world.world[x][y]["cart_rect"]
                 rect = pg.Rect(sq[0][0], sq[0][1], TILE_SIZE, TILE_SIZE)
                 pg.draw.rect(self.screen, (0, 0, 255), rect, 1)
+
+
+                render_pos = self.world.world[x][y]["render_pos"]
+
+                tile = self.world.world[x][y]["tile"]
+
+                self.screen.blit(self.world.tiles[tile], (render_pos[0],render_pos[1]))
+
         pg.display.flip()

@@ -8,7 +8,7 @@ playing = True
 
 
 pg.init()
-screen = pg.display.set_mode((600, 600))
+screen = pg.display.set_mode((640, 640))
 clock = pg.time.Clock()
 
 game = Game(screen, clock)

@@ -1,1 +1,1 @@
-TILE_SIZE = 60
+TILE_SIZE = 64
