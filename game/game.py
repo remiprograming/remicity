@@ -2,6 +2,8 @@ import pygame as pg
 import sys
 from .world import World
 from .settings import TILE_SIZE
+from .utils import draw_text
+from .camera import Camera
 
 class Game:
     def __init__(self, screen, clock):
@@ -9,7 +11,9 @@ class Game:
         self.clock = clock
         self.width, self.height = self.screen.get_size()
 
-        self.world = World(10, 10, self.width, self.height)
+        self.world = World(15, 15, self.width, self.height)
+
+        self.camera = Camera(self.width, self.height)
 
 
     def run(self):
@@ -31,7 +35,7 @@ class Game:
                     sys.exit()
 
     def update(self):
-        pass
+        self.camera.update()
 
     def draw(self):
         self.screen.fill((0, 0, 0))
@@ -39,15 +43,23 @@ class Game:
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
 
-                sq = self.world.world[x][y]["cart_rect"]
-                rect = pg.Rect(sq[0][0], sq[0][1], TILE_SIZE, TILE_SIZE)
-                pg.draw.rect(self.screen, (0, 0, 255), rect, 1)
+                #sq = self.world.world[x][y]["cart_rect"]
+                #rect = pg.Rect(sq[0][0], sq[0][1], TILE_SIZE, TILE_SIZE)
+                #pg.draw.rect(self.screen, (0, 0, 255), rect, 1)
 
 
                 render_pos = self.world.world[x][y]["render_pos"]
 
                 tile = self.world.world[x][y]["tile"]
 
-                self.screen.blit(self.world.tiles[tile], (render_pos[0],render_pos[1]))
+                self.screen.blit(self.world.tiles[tile], (render_pos[0] + self.camera.scroll.x, render_pos[1] + self.camera.scroll.y))
+
+        draw_text(
+            self.screen,
+            'fps {}'.format(round(self.clock.get_fps())),
+            25,
+            (0, 0, 0),
+            (10, 10)
+        )
 
         pg.display.flip()
