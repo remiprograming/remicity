@@ -30,27 +30,32 @@ class World:
             grid_pos = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
 
 
+            try:
+                if self.can_place_tile(grid_pos):
 
-            if self.can_place_tile(grid_pos):
+
+                    img = self.hud.selected_tile["image"].copy()
+                    img.set_alpha(100)
+
+                    render_pos = self.world[grid_pos[0]][grid_pos[1]]["render_pos"]
 
 
-                img = self.hud.selected_tile["image"].copy()
-                img.set_alpha(100)
 
-                render_pos = self.world[grid_pos[0]][grid_pos[1]]["render_pos"]
-                collision = self.world[grid_pos[0]][grid_pos[1]]["collision"]
-                rect = (((render_pos[0]+ camera.scroll.x),(render_pos[1] + camera.scroll.y)), ((render_pos[0] + TILE_SIZE + camera.scroll.x), (render_pos[1] +camera.scroll.y)), ((render_pos[0]+ TILE_SIZE + camera.scroll.x), (render_pos[1]+TILE_SIZE+camera.scroll.y)), ((render_pos[0] + camera.scroll.x), (render_pos[1]+TILE_SIZE+camera.scroll.y)))
-                self.temp_tile = {
-                    "image": img,
-                    "render_pos": render_pos,
-                    "collision": collision,
-                    "rect": rect
-                }
+                    collision = self.world[grid_pos[0]][grid_pos[1]]["collision"]
+                    rect = (((render_pos[0]+ camera.scroll.x),(render_pos[1] + camera.scroll.y)), ((render_pos[0] + TILE_SIZE + camera.scroll.x), (render_pos[1] +camera.scroll.y)), ((render_pos[0]+ TILE_SIZE + camera.scroll.x), (render_pos[1]+TILE_SIZE+camera.scroll.y)), ((render_pos[0] + camera.scroll.x), (render_pos[1]+TILE_SIZE+camera.scroll.y)))
+                    self.temp_tile = {
+                        "image": img,
+                        "render_pos": render_pos,
+                        "collision": collision,
+                        "rect": rect
+                    }
 
-                if mouse_action[0] and not collision:
-                    self.world[grid_pos[0]][grid_pos[1]]["tile"] = self.hud.selected_tile["name"]
-                    self.world[grid_pos[0]][grid_pos[1]]["collision"] = True
-                    self.hud.selected_tile = None
+                    if mouse_action[0] and not collision:
+                        self.world[grid_pos[0]][grid_pos[1]]["tile"] = self.hud.selected_tile["name"]
+                        self.world[grid_pos[0]][grid_pos[1]]["collision"] = True
+                        self.hud.selected_tile = None
+            except:
+                pass
 
     def draw(self, screen, camera):
 
