@@ -4,7 +4,9 @@ import random
 
 class World:
 
-    def __init__(self, grid_length_x, grid_length_y, width, height):
+    def __init__(self, hud, grid_length_x, grid_length_y, width, height):
+        self.hud = hud
+
         self.grid_length_x = grid_length_x
         self.grid_length_y = grid_length_y
         self.width = width
@@ -12,6 +14,23 @@ class World:
 
         self.world = self.create_world()
         self.tiles = self.loadimag()
+
+
+
+    def update(self):
+        pass
+
+    def draw(self, screen, camera):
+
+        for x in range(self.grid_length_x):
+            for y in range(self.grid_length_y):
+
+
+                render_pos = self.world[x][y]["render_pos"]
+
+                tile = self.world[x][y]["tile"]
+
+                screen.blit(self.tiles[tile], (render_pos[0] + camera.scroll.x, render_pos[1] + camera.scroll.y))
 
     def create_world(self):
 
