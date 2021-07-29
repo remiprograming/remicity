@@ -22,11 +22,13 @@ class World:
 
     def update(self, camera):
         mouse_pos = pg.mouse.get_pos()
+        mouse_action = pg.mouse.get_pressed()
         self.temp_tile = None
 
         if self.hud.selected_tile is not None:
 
             grid_pos = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
+
 
 
             if self.can_place_tile(grid_pos):
@@ -36,11 +38,19 @@ class World:
                 img.set_alpha(100)
 
                 render_pos = self.world[grid_pos[0]][grid_pos[1]]["render_pos"]
-
+                collision = self.world[grid_pos[0]][grid_pos[1]]["collision"]
+                rect = (((render_pos[0]+ camera.scroll.x),(render_pos[1] + camera.scroll.y)), ((render_pos[0] + TILE_SIZE + camera.scroll.x), (render_pos[1] +camera.scroll.y)), ((render_pos[0]+ TILE_SIZE + camera.scroll.x), (render_pos[1]+TILE_SIZE+camera.scroll.y)), ((render_pos[0] + camera.scroll.x), (render_pos[1]+TILE_SIZE+camera.scroll.y)))
                 self.temp_tile = {
                     "image": img,
                     "render_pos": render_pos,
+                    "collision": collision,
+                    "rect": rect
                 }
+
+                if mouse_action[0] and not collision:
+                    self.world[grid_pos[0]][grid_pos[1]]["tile"] = self.hud.selected_tile["name"]
+                    self.world[grid_pos[0]][grid_pos[1]]["collision"] = True
+                    self.hud.selected_tile = None
 
     def draw(self, screen, camera):
 
@@ -59,6 +69,13 @@ class World:
 
         if self.temp_tile is not None:
             render_pos = self.temp_tile["render_pos"]
+            rect = self.temp_tile["rect"]
+
+            if self.temp_tile["collision"]:
+                pg.draw.polygon(screen, (255, 0, 0), rect, 3)
+            else:
+                pg.draw.polygon(screen, (255, 255, 255), rect, 3)
+
             screen.blit(self.temp_tile["image"], (render_pos[0]+camera.scroll.x, render_pos[1]+camera.scroll.y))
 
     def create_world(self):
@@ -87,6 +104,8 @@ class World:
 
         r = random.randint(1,100)
 
+
+
         if r <= 10:
             tile = "skala"
         else:
@@ -96,7 +115,8 @@ class World:
             "grid" : [grid_x, grid_y],
             "cart_rect" : rect,
             "render_pos": [minx, miny],
-            "tile": tile
+            "tile": tile,
+            "collision": False if tile == "trawa" else True
         }
 
         return out
@@ -111,10 +131,11 @@ class World:
 
     def loadimag(self):
 
-        trawa = pg.image.load("sprite/trawa.png")
-        skala = pg.image.load("sprite/skala.png")
-
-        return {'trawa': trawa, "skala": skala}
+        trawa = pg.image.load("sprite/trawa.png").convert_alpha()
+        skala = pg.image.load("sprite/skala.png").convert_alpha()
+        sdm = pg.image.load("sprite/sdm.png").convert_alpha()
+        shinto = pg.image.load("sprite/shinto.png").convert_alpha()
+        return {'trawa': trawa, "skala": skala, 'sdm':sdm, 'shinto':shinto}
 
 
     def can_place_tile(self, grid_pos):
