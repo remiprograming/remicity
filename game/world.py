@@ -1,28 +1,38 @@
 import pygame as pg
 from .settings import TILE_SIZE
 import random
+from .build import sdm, shrine, Kopalnia, Tartak
 
 class World:
 
-    def __init__(self, hud, grid_length_x, grid_length_y, width, height):
+    def __init__(self, population_manager, resource_manager, entities,  hud, grid_length_x, grid_length_y, width, height):
         self.hud = hud
+        self.entities = entities
 
         self.grid_length_x = grid_length_x
         self.grid_length_y = grid_length_y
         self.width = width
         self.height = height
-
+        self.buildings = [[None for x in range(self.grid_length_x)]for y in range(self.grid_length_y)]
         self.world = self.create_world()
         self.tiles = self.loadimag()
 
         self.temp_tile = None
-
+        self.examine_tile = None
+        self.resource_manager = resource_manager
+        self.popman = population_manager
 
 
 
     def update(self, camera):
         mouse_pos = pg.mouse.get_pos()
         mouse_action = pg.mouse.get_pressed()
+
+        if mouse_action[2]:
+            self.examine_tile = None
+            self.hud.examined_tile = None
+
+
         self.temp_tile = None
 
         if self.hud.selected_tile is not None:
@@ -51,11 +61,39 @@ class World:
                     }
 
                     if mouse_action[0] and not collision:
-                        self.world[grid_pos[0]][grid_pos[1]]["tile"] = self.hud.selected_tile["name"]
+
+                        if self.hud.selected_tile["name"] == 'SDM':
+                            ent = sdm(render_pos, self.resource_manager, self.popman)
+                            self.entities.append(ent)
+                            self.buildings[grid_pos[0]][grid_pos[1]] = ent
+                        elif self.hud.selected_tile["name"] == 'Shrine':
+                            ent = shrine(render_pos, self.resource_manager)
+                            self.entities.append(ent)
+                            self.buildings[grid_pos[0]][grid_pos[1]] = ent
+                        elif self.hud.selected_tile["name"] == 'Kopalnia':
+                            ent = Kopalnia(render_pos, self.resource_manager)
+                            self.entities.append(ent)
+                            self.buildings[grid_pos[0]][grid_pos[1]] = ent
+                        elif self.hud.selected_tile["name"] == 'Tartak':
+                            ent = Tartak(render_pos, self.resource_manager)
+                            self.entities.append(ent)
+                            self.buildings[grid_pos[0]][grid_pos[1]] = ent
                         self.world[grid_pos[0]][grid_pos[1]]["collision"] = True
                         self.hud.selected_tile = None
+
             except:
                 pass
+        else:
+            try:
+                grid_pos = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
+                if self.can_place_tile(grid_pos):
+                    building = self.buildings[grid_pos[0]][grid_pos[1]]
+                    if mouse_action[0] and (building is not None):
+                        self.examine_tile = grid_pos
+                        self.hud.examined_tile = building
+            except:
+                pass
+
 
     def draw(self, screen, camera):
 
@@ -67,10 +105,22 @@ class World:
 
                 render_pos = self.world[x][y]["render_pos"]
 
+
+
                 tile = self.world[x][y]["tile"]
                 if tile != "":
                     screen.blit(self.tiles[tile], (render_pos[0] + camera.scroll.x, render_pos[1] + camera.scroll.y))
 
+
+                building = self.buildings[x][y]
+                if building is not None:
+                    screen.blit(building.image, (render_pos[0] + camera.scroll.x, render_pos[1] + camera.scroll.y))
+                    if self.examine_tile is not None:
+                        if (x == self.examine_tile[0]) and (y == self.examine_tile[1]):
+                            mask = pg.mask.from_surface(building.image).outline()
+                            mask = [(x + render_pos[0] + camera.scroll.x, y + render_pos[1] + camera.scroll.y) for x, y
+                                    in mask]
+                            pg.draw.polygon(screen, (255, 255, 255), mask, 3)
 
         if self.temp_tile is not None:
             render_pos = self.temp_tile["render_pos"]
@@ -138,9 +188,8 @@ class World:
 
         trawa = pg.image.load("sprite/trawa.png").convert_alpha()
         skala = pg.image.load("sprite/skala.png").convert_alpha()
-        sdm = pg.image.load("sprite/sdm.png").convert_alpha()
-        shinto = pg.image.load("sprite/shinto.png").convert_alpha()
-        return {'trawa': trawa, "skala": skala, 'sdm':sdm, 'shinto':shinto}
+
+        return {'trawa': trawa, "skala": skala}
 
 
     def can_place_tile(self, grid_pos):

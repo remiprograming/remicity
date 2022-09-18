@@ -5,6 +5,8 @@ from .settings import TILE_SIZE
 from .utils import draw_text
 from .camera import Camera
 from .hud import Hud
+from .res import ResourceManager
+from .pop import PopulationManager
 
 class Game:
     def __init__(self, screen, clock):
@@ -12,9 +14,14 @@ class Game:
         self.clock = clock
         self.width, self.height = self.screen.get_size()
 
-        self.hud = Hud(self.width, self.height)
+        self.entities = []
 
-        self.world = World(self.hud, 10, 10, self.width, self.height)
+        self.resource_manager = ResourceManager()
+        self.population = PopulationManager(self.resource_manager)
+
+        self.hud = Hud(self.population, self.resource_manager, self.width, self.height)
+
+        self.world = World(self.population, self.resource_manager, self.entities, self.hud, 10, 10, self.width, self.height)
 
         self.camera = Camera(self.width, self.height)
 
@@ -36,13 +43,15 @@ class Game:
                 sys.exit()
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
-                    pg.quit()
-                    sys.exit()
+                    self.playing = False
 
     def update(self):
         self.camera.update()
         self.hud.update()
         self.world.update(self.camera)
+        self.population.update()
+        for e in self.entities:
+            e.update()
 
     def draw(self):
         self.screen.fill((0, 0, 0))

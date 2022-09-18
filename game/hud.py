@@ -2,7 +2,7 @@ import pygame as pg
 from .utils import draw_text
 
 class Hud:
-    def __init__(self, width, height):
+    def __init__(self, popman, resource_manager, width, height):
         self.width = width
         self.height = height
         self.hud_colour = (198, 155, 93, 175)
@@ -24,6 +24,9 @@ class Hud:
         self.tiles = self.create_build_hud()
 
         self.selected_tile = None
+        self.examined_tile = None
+        self.resource_manager = resource_manager
+        self.popman = popman
 
     def create_build_hud(self):
 
@@ -44,7 +47,8 @@ class Hud:
                     "name": image_name,
                     "icon": image_scale,
                     "image": self.images[image_name],
-                    "rect": rect
+                    "rect": rect,
+                    'affordable': True
                 }
             )
 
@@ -60,7 +64,12 @@ class Hud:
             self.selected_tile = None
 
         for tile in self.tiles:
-            if tile["rect"].collidepoint(mouse_pos):
+            if self.resource_manager.is_affordable(tile['name']):
+                tile['affordable'] = True
+            else:
+                tile["affordable"] = False
+
+            if tile["rect"].collidepoint(mouse_pos) and tile["affordable"]:
                 if mouse_action[0]:
                     self.selected_tile = tile
 
@@ -69,25 +78,44 @@ class Hud:
 
         screen.blit(self.resouces_surface, (0,0))
         screen.blit(self.build_surface, (self.width * 0.84, self.height * 0.74))
-        screen.blit(self.select_surface, (self.width * 0.35, self.height * 0.79))
+
+        if self.examined_tile is not None:
+            w, h = self.select_rect.width, self.select_rect.height
+            screen.blit(self.select_surface, (self.width * 0.35, self.height * 0.79))
+            img = self.examined_tile.image.copy()
+            img_scale = self.scale_image(img, h=h*0.9)
+            screen.blit(img_scale, (self.width * 0.35 + 10, self.height * 0.79 + 10))
+            draw_text(screen, self.examined_tile.name, 40, (0, 0, 0), self.select_rect.topleft)
 
         for tile in self.tiles:
-            screen.blit(tile["icon"], tile["rect"].topleft)
+            icon = tile['icon'].copy()
+            if not tile['affordable']:
+                icon.set_alpha(100)
+            screen.blit(icon, tile["rect"].topleft)
 
-        pos = self.width - 400
-        for resource in ["mienso:", "zelazo:", "kaska:"]:
-            draw_text(screen, resource, 30, (0, 0, 0), (pos, 10))
+        pos = self.width - 800
+        draw_text(screen, f'Ludzie: {self.popman.human}/{self.popman.cap["human"]}', 30, (0, 0, 0), (pos, 10))
+        pos += 200
+        draw_text(screen, f'Youkai: {self.popman.youkai}/{self.popman.cap["youkai"]}', 30, (0, 0, 0), (pos, 10))
+        pos += 200
+        for resource, resource_value in self.resource_manager.resources.items():
+            txt = resource + ': ' + str(resource_value)
+            draw_text(screen, txt, 30, (0, 0, 0), (pos, 10))
             pos += 100
+
+
+
+
 
     def load_images(self):
 
-        trawa = pg.image.load("sprite/trawa.png")
-        skala = pg.image.load("sprite/skala.png")
         sdm = pg.image.load("sprite/sdm.png")
         shinto = pg.image.load("sprite/shinto.png")
+        kopalnia = pg.image.load("sprite/kopalnia.png")
+        tartak = pg.image.load("sprite/tartak.png")
 
         images = {
-            'trawa': trawa, "skala": skala, 'sdm':sdm, 'shinto':shinto
+            'SDM': sdm, 'Shrine': shinto, 'Kopalnia': kopalnia, 'Tartak': tartak
         }
 
         return images
